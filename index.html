@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Aplicativo para controle de leituras e geração de faturas de energia solar com QR Code Pix">
+  <meta name="theme-color" content="#27ae60">
+  <title>Fatura Solar Web - MVP</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/6646/6646158.png" type="image/png">
+  <!-- Font Awesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Container principal -->
+  <div class="container">
+    <!-- Área de mensagem -->
+    <header>
+      <h1><i class="fas fa-solar-panel"></i> Fatura Solar Web</h1>
+      <p>Controle suas leituras e gere faturas com QR Code Pix!</p>
+    </header>
+    
+    <!-- Barra de navegação -->
+    <nav id="main-nav">
+      <!-- Será preenchido dinamicamente pelo JavaScript -->
+    </nav>
+    
+    <!-- Área de Conteúdo -->
+    <div id="app-content">
+      <!-- Conteúdo dinâmico (cadastro, tela de leitura, fatura e histórico) -->
+    </div>
+    
+    <!-- Rodapé -->
+    <footer>
+      <p>&copy; 2023 Fatura Solar Web | <a href="#" id="sobre-link">Sobre</a> | <a href="#" id="contato-link">Contato</a></p>
+    </footer>
+  </div>
+  
+  <!-- Biblioteca de QRCode -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Script principal -->
+  <script src="main.js"></script>
+</body>
+</html>
