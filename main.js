@@ -37,6 +37,16 @@ function saveAppData(data) {
   localStorage.setItem("faturaSolarData", JSON.stringify(data));
 }
 
+// Escapa HTML para evitar injeção ao renderizar dados de usuário
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // Elemento de conteúdo
 const appContent = document.getElementById("app-content");
 const mainNav = document.getElementById("main-nav");
@@ -121,26 +131,30 @@ function renderCadastro() {
 // Renderiza a tela de configurações
 function renderConfig() {
   const data = getAppData();
+  const userName = escapeHtml(data.user.nome);
+  const userWhatsapp = escapeHtml(data.user.whatsapp);
+  const chavePix = escapeHtml(data.chavePix || '');
+  const taxaPadrao = escapeHtml(data.taxaPadrao || '');
   appContent.innerHTML = `
     <div class="card">
       <h2><i class="fas fa-cog"></i> Configurações</h2>
       <form id="config-form">
         <div class="input-group">
           <label for="config-nome"><i class="fas fa-user"></i> Seu nome</label>
-          <input type="text" id="config-nome" value="${data.user.nome}" required>
+          <input type="text" id="config-nome" value="${userName}" required>
         </div>
         <div class="input-group">
           <label for="config-whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</label>
-          <input type="tel" id="config-whatsapp" value="${data.user.whatsapp}" required>
+          <input type="tel" id="config-whatsapp" value="${userWhatsapp}" required>
         </div>
         <div class="input-group">
           <label for="config-chave-pix"><i class="fas fa-key"></i> Sua Chave Pix</label>
-          <input type="text" id="config-chave-pix" value="${data.chavePix || ''}">
+          <input type="text" id="config-chave-pix" value="${chavePix}">
         </div>
         <div class="input-group">
           <label for="config-taxa"><i class="fas fa-dollar-sign"></i> Taxa de Energia (R$/kWh)</label>
           <div class="rate-input-group">
-            <input type="number" step="0.01" id="config-taxa" value="${data.taxaPadrao || ''}" placeholder="Ex: 0.89" required>
+            <input type="number" step="0.01" id="config-taxa" value="${taxaPadrao}" placeholder="Ex: 0.89" required>
             <span class="unit">R$/kWh</span>
           </div>
         </div>
@@ -173,11 +187,12 @@ function renderConfig() {
 // Renderiza a tela principal para inserção de leitura e exibição da fatura
 function renderHome() {
   const data = getAppData();
+  const userName = escapeHtml(data.user.nome);
   appContent.innerHTML = `
     <!-- Lista de Inquilinos -->
     <div class="card">
       <h2><i class="fas fa-users"></i> Meus Inquilinos</h2>
-      <p>Olá, ${data.user.nome}! Selecione um inquilino para gerar uma fatura.</p>
+      <p>Olá, ${userName}! Selecione um inquilino para gerar uma fatura.</p>
       <div id="inquilinos-home-list" class="inquilinos-grid">
         ${data.inquilinos.length === 0 ? 
           '<p class="empty-state"><i class="fas fa-info-circle"></i> Nenhum inquilino cadastrado.</p>' : 
@@ -222,12 +237,14 @@ function renderInquilinosHomeList() {
   inquilinosList.innerHTML = '';
   
   data.inquilinos.forEach((inquilino, index) => {
+    const inquilinoNome = escapeHtml(inquilino.nome);
+    const inquilinoUnidade = escapeHtml(inquilino.unidade);
     const card = document.createElement("div");
     card.className = "inquilino-home-card";
     card.innerHTML = `
       <div class="inquilino-home-info">
-        <h3>${inquilino.nome}</h3>
-        <p><i class="fas fa-home"></i> ${inquilino.unidade}</p>
+        <h3>${inquilinoNome}</h3>
+        <p><i class="fas fa-home"></i> ${inquilinoUnidade}</p>
       </div>
       <button class="primary-btn gerar-fatura-btn" data-index="${index}">
         <i class="fas fa-file-invoice-dollar"></i> Gerar Fatura
@@ -306,7 +323,7 @@ function renderHistoricoPage() {
       
       // Informações do inquilino, se existirem
       const inquilinoInfo = fatura.inquilino ? `
-        <p><strong>Inquilino:</strong> ${fatura.inquilino.nome} (${fatura.inquilino.unidade})</p>
+        <p><strong>Inquilino:</strong> ${escapeHtml(fatura.inquilino.nome)} (${escapeHtml(fatura.inquilino.unidade)})</p>
       ` : '';
       
       div.innerHTML = `
@@ -480,14 +497,18 @@ function renderInquilinosList() {
   inquilinosList.innerHTML = '';
   
   data.inquilinos.forEach((inquilino, index) => {
+    const inquilinoNome = escapeHtml(inquilino.nome);
+    const inquilinoUnidade = escapeHtml(inquilino.unidade);
+    const inquilinoWhatsapp = escapeHtml(inquilino.whatsapp);
+    const inquilinoTaxa = escapeHtml(inquilino.taxa);
     const card = document.createElement("div");
     card.className = "inquilino-card";
     card.innerHTML = `
       <div class="inquilino-info">
-        <h3>${inquilino.nome}</h3>
-        <p><i class="fas fa-home"></i> ${inquilino.unidade}</p>
-        <p><i class="fab fa-whatsapp"></i> ${inquilino.whatsapp}</p>
-        ${inquilino.taxa ? `<p><i class="fas fa-dollar-sign"></i> Taxa: R$ ${inquilino.taxa}/kWh</p>` : ''}
+        <h3>${inquilinoNome}</h3>
+        <p><i class="fas fa-home"></i> ${inquilinoUnidade}</p>
+        <p><i class="fab fa-whatsapp"></i> ${inquilinoWhatsapp}</p>
+        ${inquilino.taxa ? `<p><i class="fas fa-dollar-sign"></i> Taxa: R$ ${inquilinoTaxa}/kWh</p>` : ''}
       </div>
       <div class="inquilino-actions">
         <button class="icon-btn edit-btn" data-index="${index}"><i class="fas fa-edit"></i></button>
@@ -533,6 +554,10 @@ function showInquilinoForm(index = null) {
   
   const modal = document.createElement("div");
   modal.className = "modal";
+  const inquilinoNome = escapeHtml(inquilino.nome);
+  const inquilinoUnidade = escapeHtml(inquilino.unidade);
+  const inquilinoWhatsapp = escapeHtml(inquilino.whatsapp);
+  const inquilinoTaxa = escapeHtml(inquilino.taxa);
   modal.innerHTML = `
     <div class="modal-content">
       <div class="modal-header">
@@ -542,20 +567,20 @@ function showInquilinoForm(index = null) {
       <form id="inquilino-form">
         <div class="input-group">
           <label for="inquilino-nome"><i class="fas fa-user"></i> Nome do Inquilino</label>
-          <input type="text" id="inquilino-nome" value="${inquilino.nome}" placeholder="Nome completo" required>
+          <input type="text" id="inquilino-nome" value="${inquilinoNome}" placeholder="Nome completo" required>
         </div>
         <div class="input-group">
           <label for="inquilino-unidade"><i class="fas fa-home"></i> Unidade/Apartamento</label>
-          <input type="text" id="inquilino-unidade" value="${inquilino.unidade}" placeholder="Ex: Apto 101" required>
+          <input type="text" id="inquilino-unidade" value="${inquilinoUnidade}" placeholder="Ex: Apto 101" required>
         </div>
         <div class="input-group">
           <label for="inquilino-whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</label>
-          <input type="tel" id="inquilino-whatsapp" value="${inquilino.whatsapp}" placeholder="Ex: 5511999999999" required>
+          <input type="tel" id="inquilino-whatsapp" value="${inquilinoWhatsapp}" placeholder="Ex: 5511999999999" required>
         </div>
         <div class="input-group">
           <label for="inquilino-taxa"><i class="fas fa-dollar-sign"></i> Taxa de Energia (R$/kWh)</label>
           <div class="rate-input-group">
-            <input type="number" step="0.01" id="inquilino-taxa" value="${inquilino.taxa}" placeholder="Ex: 0.89">
+            <input type="number" step="0.01" id="inquilino-taxa" value="${inquilinoTaxa}" placeholder="Ex: 0.89">
             <span class="unit">R$/kWh</span>
           </div>
         </div>
@@ -609,10 +634,11 @@ function showInquilinoForm(index = null) {
 function deleteInquilino(index) {
   const data = getAppData();
   const inquilino = data.inquilinos[index];
+  const inquilinoNome = escapeHtml(inquilino.nome);
   
   showModal(
     '<i class="fas fa-trash"></i> Excluir Inquilino',
-    `<p>Tem certeza que deseja excluir o inquilino <strong>${inquilino.nome}</strong>?</p>
+    `<p>Tem certeza que deseja excluir o inquilino <strong>${inquilinoNome}</strong>?</p>
      <p>Esta ação não pode ser desfeita.</p>`,
     [
       {
@@ -641,18 +667,21 @@ function deleteInquilino(index) {
 function gerarFaturaInquilino(index, origem = 'inquilinos') {
   const data = getAppData();
   const inquilino = data.inquilinos[index];
+  const inquilinoNome = escapeHtml(inquilino.nome);
+  const inquilinoUnidade = escapeHtml(inquilino.unidade);
+  const taxaExibida = escapeHtml(inquilino.taxa || data.taxaPadrao || 'Não configurada');
   
   appContent.innerHTML = `
     <div class="card">
       <h2><i class="fas fa-file-invoice-dollar"></i> Gerar Fatura para Inquilino</h2>
-      <p><strong>Inquilino:</strong> ${inquilino.nome} (${inquilino.unidade})</p>
+      <p><strong>Inquilino:</strong> ${inquilinoNome} (${inquilinoUnidade})</p>
       
       <form id="fatura-inquilino-form">
         <div class="input-group">
           <label for="leitura-atual"><i class="fas fa-plug"></i> Leitura atual (kWh)</label>
           <input type="number" id="leitura-atual" placeholder="Digite o valor do medidor" required>
         </div>
-        <p class="taxa-info"><i class="fas fa-info-circle"></i> Taxa atual: R$ ${inquilino.taxa || data.taxaPadrao || 'Não configurada'}/kWh</p>
+        <p class="taxa-info"><i class="fas fa-info-circle"></i> Taxa atual: R$ ${taxaExibida}/kWh</p>
         <button type="submit"><i class="fas fa-file-invoice-dollar"></i> Gerar Fatura</button>
       </form>
       
@@ -851,8 +880,8 @@ function renderFatura(fatura) {
   const inquilinoInfo = fatura.inquilino ? `
     <div class="inquilino-fatura-info">
       <h3><i class="fas fa-user"></i> Dados do Inquilino</h3>
-      <p><strong>Nome:</strong> ${fatura.inquilino.nome}</p>
-      <p><strong>Unidade:</strong> ${fatura.inquilino.unidade}</p>
+      <p><strong>Nome:</strong> ${escapeHtml(fatura.inquilino.nome)}</p>
+      <p><strong>Unidade:</strong> ${escapeHtml(fatura.inquilino.unidade)}</p>
     </div>
   ` : '';
   
